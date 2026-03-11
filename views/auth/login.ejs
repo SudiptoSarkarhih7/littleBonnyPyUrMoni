@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><%- include('../partials/head') %></head>
+<body class="auth-body">
+
+<div class="auth-container">
+  <div class="auth-left">
+    <div class="auth-left-inner">
+      <div class="brand-mark">⚡ PayPulse</div>
+      <h1 class="auth-headline">Welcome<br/><em>back.</em></h1>
+      <p class="auth-sub">Your wallet is waiting. Log in to check your balance and send money instantly.</p>
+      <div class="auth-features">
+        <div class="feat"><span class="feat-icon">💰</span>Check your balance</div>
+        <div class="feat"><span class="feat-icon">📤</span>Send to anyone</div>
+        <div class="feat"><span class="feat-icon">📋</span>View history</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-right">
+    <div class="auth-card">
+      <h2 class="card-title">Sign in</h2>
+      <p class="card-sub">Enter your credentials to continue</p>
+
+      <div id="error-banner" class="error-banner hidden"></div>
+
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" placeholder="rahul@example.com" required />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="Your password" required />
+        </div>
+
+        <button type="submit" class="btn-primary" id="submit-btn">
+          <span class="btn-text">Sign In</span>
+        </button>
+      </form>
+
+      <p class="auth-switch">New to PayPulse? <a href="/auth/signup">Create account</a></p>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  const errBanner = document.getElementById('error-banner');
+  errBanner.classList.add('hidden');
+
+  btn.disabled = true;
+  btn.querySelector('.btn-text').textContent = 'Signing in…';
+
+  try {
+    const res = await fetch('/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+      }),
+    });
+    const json = await res.json();
+
+    if (json.success) {
+      window.location.href = '/dashboard';
+    } else {
+      errBanner.textContent = json.message || 'Login failed.';
+      errBanner.classList.remove('hidden');
+      btn.disabled = false;
+      btn.querySelector('.btn-text').textContent = 'Sign In';
+    }
+  } catch {
+    errBanner.textContent = 'Network error. Try again.';
+    errBanner.classList.remove('hidden');
+    btn.disabled = false;
+    btn.querySelector('.btn-text').textContent = 'Sign In';
+  }
+});
+</script>
+</body>
+</html>

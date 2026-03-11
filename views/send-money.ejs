@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><%- include('partials/head') %></head>
+<body class="app-body">
+
+<%- include('partials/navbar') %>
+
+<main class="app-main">
+  <div class="page-container narrow">
+
+    <div class="page-header">
+      <a href="/dashboard" class="back-link">← Back</a>
+      <h1 class="page-title">Send Money</h1>
+      <p class="page-sub">Your balance: <strong>₹<%= user.walletBalance.toFixed(2) %></strong></p>
+    </div>
+
+    <!-- Success overlay -->
+    <div id="success-overlay" class="success-overlay hidden">
+      <div class="success-card">
+        <div class="success-anim">✓</div>
+        <h2>Money Sent!</h2>
+        <p id="success-msg"></p>
+        <div class="success-ref" id="success-ref"></div>
+        <div class="success-actions">
+          <button onclick="resetForm()" class="btn-secondary">Send Again</button>
+          <a href="/dashboard" class="btn-primary">Go to Dashboard</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="send-card" id="send-card">
+
+      <!-- Method selector -->
+      <div class="method-tabs">
+        <button class="method-tab active" data-method="upi" onclick="setMethod('upi', this)">
+          <span>📲</span> UPI ID
+        </button>
+        <button class="method-tab" data-method="phone" onclick="setMethod('phone', this)">
+          <span>📱</span> Phone
+        </button>
+        <button class="method-tab" data-method="email" onclick="setMethod('email', this)">
+          <span>✉️</span> Email
+        </button>
+      </div>
+
+      <form id="send-form" novalidate>
+        <input type="hidden" id="transferMethod" name="transferMethod" value="upi" />
+
+        <div class="form-group">
+          <label id="recipient-label" for="recipient">UPI ID</label>
+          <input type="text" id="recipient" name="recipient"
+            placeholder="e.g. 9876543210@paypulse"
+            autocomplete="off" required />
+          <span class="field-hint" id="field-hint">Enter the recipient's UPI ID</span>
+        </div>
+
+        <div class="form-group">
+          <label for="amount">Amount (₹)</label>
+          <div class="amount-wrap">
+            <span class="rupee-prefix">₹</span>
+            <input type="number" id="amount" name="amount"
+              placeholder="0.00" min="1" max="100000" step="0.01" required />
+          </div>
+          <!-- Quick amount chips -->
+          <div class="quick-amounts">
+            <% [100, 200, 500, 1000].forEach(a => { %>
+              <button type="button" class="chip" onclick="setAmount(<%= a %>)">₹<%= a %></button>
+            <% }) %>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="note">Note <span class="optional">(optional)</span></label>
+          <input type="text" id="note" name="note"
+            placeholder="Dinner split, rent…" maxlength="100" />
+        </div>
+
+        <div id="error-banner" class="error-banner hidden"></div>
+
+        <button type="submit" class="btn-primary full-width" id="send-btn">
+          <span class="btn-text">Send Money →</span>
+        </button>
+      </form>
+    </div>
+
+  </div>
+</main>
+
+<script>
+const hints = {
+  upi:   { label: 'UPI ID',        placeholder: 'e.g. 9876543210@paypulse', hint: 'Enter the recipient\'s UPI ID' },
+  phone: { label: 'Phone Number',  placeholder: 'e.g. 9876543210',          hint: '10-digit Indian mobile number' },
+  email: { label: 'Email Address', placeholder: 'e.g. rahul@example.com',   hint: 'Registered email address' },
+};
+
+function setMethod(method, el) {
+  document.querySelectorAll('.method-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('transferMethod').value = method;
+  const cfg = hints[method];
+  document.getElementById('recipient-label').textContent = cfg.label;
+  document.getElementById('recipient').placeholder = cfg.placeholder;
+  document.getElementById('field-hint').textContent = cfg.hint;
+  document.getElementById('recipient').value = '';
+}
+
+function setAmount(val) {
+  document.getElementById('amount').value = val;
+}
+
+function resetForm() {
+  document.getElementById('success-overlay').classList.add('hidden');
+  document.getElementById('send-card').classList.remove('hidden');
+  document.getElementById('send-form').reset();
+  document.getElementById('error-banner').classList.add('hidden');
+}
+
+document.getElementById('send-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('send-btn');
+  const errBanner = document.getElementById('error-banner');
+  errBanner.classList.add('hidden');
+
+  const payload = {
+    recipient: document.getElementById('recipient').value.trim(),
+    transferMethod: document.getElementById('transferMethod').value,
+    amount: document.getElementById('amount').value,
+    note: document.getElementById('note').value.trim(),
+  };
+
+  btn.disabled = true;
+  btn.querySelector('.btn-text').textContent = 'Processing…';
+
+  try {
+    const res = await fetch('/transfer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json();
+
+    if (json.success) {
+      document.getElementById('success-msg').textContent = json.message;
+      document.getElementById('success-ref').textContent = 'Ref: ' + json.transaction.referenceId;
+      document.getElementById('send-card').classList.add('hidden');
+      document.getElementById('success-overlay').classList.remove('hidden');
+    } else {
+      errBanner.textContent = json.message || 'Transfer failed.';
+      errBanner.classList.remove('hidden');
+    }
+  } catch {
+    errBanner.textContent = 'Network error. Please try again.';
+    errBanner.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btn.querySelector('.btn-text').textContent = 'Send Money →';
+  }
+});
+</script>
+</body>
+</html>

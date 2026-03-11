@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><%- include('partials/head') %></head>
+<body class="app-body">
+
+<%- include('partials/navbar') %>
+
+<main class="app-main">
+  <div class="page-container">
+
+    <!-- Hero: Balance Card -->
+    <section class="balance-section">
+      <div class="balance-card">
+        <div class="balance-card-left">
+          <p class="balance-label">Available Balance</p>
+          <h1 class="balance-amount">₹<span id="balance-val"><%= user.walletBalance.toFixed(2) %></span></h1>
+          <div class="upi-badge">
+            <span class="upi-icon">📲</span>
+            <span class="upi-text"><%= user.upiId %></span>
+            <button class="copy-btn" onclick="copyUPI()">Copy</button>
+          </div>
+        </div>
+        <div class="balance-card-right">
+          <a href="/send" class="send-fab">
+            <span>Send</span>
+            <span class="fab-arrow">→</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Row -->
+    <section class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon sent">↑</div>
+        <div>
+          <p class="stat-label">Total Sent</p>
+          <p class="stat-value">₹<%= stats.totalSent.toFixed(2) %></p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon received">↓</div>
+        <div>
+          <p class="stat-label">Total Received</p>
+          <p class="stat-value">₹<%= stats.totalReceived.toFixed(2) %></p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon txns">⚡</div>
+        <div>
+          <p class="stat-label">Transactions</p>
+          <p class="stat-value"><%= stats.txCount %></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recent Transactions -->
+    <section class="recent-section">
+      <div class="section-header">
+        <h2 class="section-title">Recent Activity</h2>
+        <a href="/transactions" class="view-all-link">View all →</a>
+      </div>
+
+      <% if (recentTransactions.length === 0) { %>
+        <div class="empty-state">
+          <div class="empty-icon">💸</div>
+          <p>No transactions yet.</p>
+          <a href="/send" class="btn-primary-sm">Send your first payment</a>
+        </div>
+      <% } else { %>
+        <div class="tx-list">
+          <% recentTransactions.forEach(tx => { %>
+            <div class="tx-item">
+              <div class="tx-avatar <%= tx.type %>">
+                <%= tx.counterparty.name.charAt(0).toUpperCase() %>
+              </div>
+              <div class="tx-info">
+                <p class="tx-name"><%= tx.counterparty.name %></p>
+                <p class="tx-meta"><%= tx.counterparty.upiId %> · <%= new Date(tx.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) %></p>
+                <% if (tx.note) { %><p class="tx-note">"<%= tx.note %>"</p><% } %>
+              </div>
+              <div class="tx-amount-wrap">
+                <p class="tx-amount <%= tx.type %>">
+                  <%= tx.type === 'debit' ? '−' : '+' %>₹<%= tx.amount.toFixed(2) %>
+                </p>
+                <span class="tx-status <%= tx.status %>"><%= tx.status %></span>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+    </section>
+
+  </div>
+</main>
+
+<script>
+function copyUPI() {
+  const upi = '<%= user.upiId %>';
+  navigator.clipboard.writeText(upi).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+<%# views/partials/navbar.ejs %>
+<nav class="navbar">
+  <a class="navbar-brand" href="/dashboard">
+    <span class="brand-icon">⚡</span>
+    <span>PayPulse</span>
+  </a>
+  <div class="navbar-links">
+    <a href="/dashboard" class="nav-link <%= typeof title !== 'undefined' && title.includes('Dashboard') ? 'active' : '' %>">Dashboard</a>
+    <a href="/send" class="nav-link <%= typeof title !== 'undefined' && title.includes('Send') ? 'active' : '' %>">Send Money</a>
+    <a href="/transactions" class="nav-link <%= typeof title !== 'undefined' && title.includes('History') ? 'active' : '' %>">History</a>
+    <div class="nav-user">
+      <div class="avatar-circle"><%= user.name.charAt(0).toUpperCase() %></div>
+      <span class="user-name"><%= user.name.split(' ')[0] %></span>
+    </div>
+    <a href="/auth/logout" class="nav-logout">Logout</a>
+  </div>
+</nav>

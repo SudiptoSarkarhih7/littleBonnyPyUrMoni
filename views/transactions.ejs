@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><%- include('partials/head') %></head>
+<body class="app-body">
+
+<%- include('partials/navbar') %>
+
+<main class="app-main">
+  <div class="page-container">
+
+    <div class="page-header">
+      <h1 class="page-title">Transaction History</h1>
+      <p class="page-sub"><%= pagination.total %> transaction<%= pagination.total !== 1 ? 's' : '' %> total</p>
+    </div>
+
+    <% if (transactions.length === 0) { %>
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <p>No transactions found.</p>
+        <a href="/send" class="btn-primary-sm">Make your first transfer</a>
+      </div>
+    <% } else { %>
+
+      <div class="tx-table-wrap">
+        <table class="tx-table">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Counterparty</th>
+              <th>Amount</th>
+              <th>Note</th>
+              <th>Ref ID</th>
+              <th>Date & Time</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% transactions.forEach(tx => { %>
+              <tr class="tx-row">
+                <td>
+                  <span class="tx-type-badge <%= tx.type %>">
+                    <%= tx.type === 'debit' ? '↑ Sent' : '↓ Received' %>
+                  </span>
+                </td>
+                <td class="tx-party">
+                  <div class="tx-party-avatar <%= tx.type %>">
+                    <%= tx.counterparty.name.charAt(0).toUpperCase() %>
+                  </div>
+                  <div>
+                    <p class="tx-party-name"><%= tx.counterparty.name %></p>
+                    <p class="tx-party-upi"><%= tx.counterparty.upiId %></p>
+                  </div>
+                </td>
+                <td class="tx-amount <%= tx.type %>">
+                  <%= tx.type === 'debit' ? '−' : '+' %>₹<%= tx.amount.toFixed(2) %>
+                </td>
+                <td class="tx-note-cell">
+                  <%= tx.note || '—' %>
+                </td>
+                <td class="tx-ref"><code><%= tx.referenceId %></code></td>
+                <td class="tx-date">
+                  <%= new Date(tx.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) %>
+                  <span class="tx-time"><%= new Date(tx.createdAt).toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' }) %></span>
+                </td>
+                <td>
+                  <span class="tx-status <%= tx.status %>"><%= tx.status %></span>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <% if (pagination.pages > 1) { %>
+        <div class="pagination">
+          <% for(let i = 1; i <= pagination.pages; i++) { %>
+            <a href="/transactions?page=<%= i %>"
+               class="page-btn <%= pagination.page === i ? 'active' : '' %>">
+              <%= i %>
+            </a>
+          <% } %>
+        </div>
+      <% } %>
+
+    <% } %>
+
+  </div>
+</main>
+
+</body>
+</html>
